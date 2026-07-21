@@ -1,0 +1,51 @@
+name: Build
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+  workflow_dispatch:
+    inputs:
+      python-version:
+        description: Desired python version
+        required: false
+        default: "3.13"
+
+env:
+  PYTHON_VERSION: ${{ inputs.python-version || '3.13' }}
+
+jobs:
+  build:
+    runs-on:
+      - ubuntu-latest
+    steps:
+      - name: Checkout code
+        # https://github.com/marketplace/actions/checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Install python
+        # https://github.com/marketplace/actions/setup-python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          pip install uv
+          uv sync --locked
+
+      - name: Check code formatting
+        shell: bash
+        run: uv tool run ruff check
+
+      - name: Run tests
+        shell: bash
+        run: uv run pytest
+
+      - name: Build python app
+        shell: bash
+        run: uv build
