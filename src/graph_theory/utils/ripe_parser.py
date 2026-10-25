@@ -1,10 +1,15 @@
+import argparse
+import json
 import logging as log
 from collections.abc import Callable
-import json
-import argparse
+
 import networkx as nx
-from src.config.log_settings import configure_logging
+
 from src import constants
+from src.config.log_settings import configure_logging
+
+configure_logging()
+logger = log.getLogger(__name__)
 
 
 def _extract_router_hops(result: list[dict]):
@@ -133,7 +138,7 @@ def parse_to_networkx(traceroute_lines: list[str]):
         try:
             record = json.loads(line)
         except json.JSONDecodeError:
-            log.warning(f"Failed to decode JSON line at index {index}. Skipping")
+            logger.warning(f"Failed to decode JSON line at index {index}. Skipping")
             continue
 
         # 1. Register or update target/source endpoints
@@ -154,8 +159,6 @@ def parse_to_networkx(traceroute_lines: list[str]):
 
 
 def main():
-    configure_logging()
-
     parser = argparse.ArgumentParser(
         description="Parse RIPE Atlas traceroute NDJSON file."
     )
@@ -164,21 +167,21 @@ def main():
     )
     args = parser.parse_args()
 
-    with open(args.filename, "r", encoding=constants.UTF8) as file:
+    with open(args.filename, "r", encoding=constants.UTF_8) as file:
         traceroute_lines = file.read().splitlines()
 
     graph = parse_to_networkx(traceroute_lines)
 
-    log.info(f"Total Vertices: {graph.number_of_nodes()}")
-    log.info(f"Total Edges: {graph.number_of_edges()}\n")
+    logger.info(f"Total Vertices: {graph.number_of_nodes()}")
+    logger.info(f"Total Edges: {graph.number_of_edges()}\n")
 
-    log.info("Inspecting Generated Vertices Payload:")
+    logger.info("Inspecting Generated Vertices Payload:")
     for nid, attrs in graph.nodes(data=True):
-        log.info(f" ID {nid}: {attrs}")
+        logger.info(f" ID {nid}: {attrs}")
 
-    log.info("\nInspecting Path Performance Edge Weights:")
+    logger.info("\nInspecting Path Performance Edge Weights:")
     for src, dst, attrs in graph.edges(data=True):
-        log.info(
+        logger.info(
             f" Link {src} -> {dst} | Link RTT: {attrs['link_rtt_ms']}ms | Cumulative RTT: {attrs['cumulative_rtt_ms']}ms"
         )
 

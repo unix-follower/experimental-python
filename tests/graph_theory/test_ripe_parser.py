@@ -1,16 +1,15 @@
-import sys
 import json
+import sys
 
-import pytest
 import networkx as nx
+import pytest
 
 from src.graph_theory.utils.ripe_parser import (
-    _extract_router_hops,
-    _add_edges,
     NodeRegistry,
+    _add_edges,
+    _extract_router_hops,
     parse_to_networkx,
 )
-
 
 SAMPLE_NDJSON_LINE = json.dumps(
     {
