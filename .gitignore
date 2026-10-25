@@ -9,9 +9,9 @@ wheels/
 # Virtual environments
 .venv
 
-HELP.md
-data/in
-data/out
-
 ### macOS ###
 .DS_Store
+
+# Other
+HELP.md
+data

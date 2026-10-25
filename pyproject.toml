@@ -1,5 +1,5 @@
 [project]
-name = "experimental-dsa-python"
+name = "experimental-python"
 version = "1.0.0"
 description = "Experiments with data-structures and algorithms (DSA) in Python"
 readme = "README.md"
@@ -11,6 +11,10 @@ dependencies = [
     "pydot>=4.0.1",
     "pygraphviz>=2.0.1",
     "scipy>=1.18.0",
+    "geopandas>=1.1.4",
+    "numpy>=2.5.0",
+    "pandas>=2.3.3",
+    "seaborn>=0.13.2",
 ]
 
 [dependency-groups]
