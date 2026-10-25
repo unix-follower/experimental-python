@@ -22,6 +22,9 @@ ln -s $HOME/experimental-java/data data
 uv sync
 source .venv/bin/activate
 uv run jupyter lab
+uv run jupyter lab --allow-root --ip=0.0.0.0 --NotebookApp.allow_origin='*'
 
+uv run python -m src.pc_hardware_analysis.collect_image_urls
 uv run python -m src.graph_theory.main
 ```
+http://192.168.64.2:8888/lab?token=<token>
