@@ -1,8 +1,8 @@
 # Copilot Instructions
 
-Experiments with data structures, algorithms, graph theory, geospatial analysis and PC/GPU hardware analysis
-(Vulkan profiles, math and ML) in Python 3.13 / uv (networkx, geopandas, pandas, numpy, scipy, scikit-learn, torch,
-tensorflow, matplotlib, seaborn; pytest for tests). Dependencies live in `pyproject.toml`.
+Experiments with data structures, algorithms, graph theory, geospatial analysis, PC/GPU hardware analysis
+(Vulkan profiles, math and ML) and molecular machine learning (MoleculeNet) in Python 3.13 / uv (networkx, geopandas,
+pandas, numpy, scipy, sympy, scikit-learn, torch, tensorflow, rdkit, sqlalchemy/psycopg, matplotlib, seaborn; pytest for tests). Dependencies live in `pyproject.toml`.
 
 ## Layout
 
@@ -16,11 +16,19 @@ tensorflow, matplotlib, seaborn; pytest for tests). Dependencies live in `pyproj
   - `vulkan_math_data.py` – Vulkan profile / GPU catalog / benchmark loaders and feature matrix builders.
   - `collect_image_urls.py` – image URL collection script (aiohttp + beautifulsoup4).
   - `utils/fs_utils.py` – data-dir lookup helper.
+- `src/moleculenet/` – notebook-first molecular ML on MoleculeNet datasets (moved from another repo; numbered notebooks, keep names/numbering):
+  - `01_data_audit`, `03_ml_requirements`, `06`/`10`/`11` Delaney regression (sklearn/PyTorch/TensorFlow), `09_framework_comparison`,
+    `12`/`13` graph representations and intuition, `14_sklearn_lipophilicity_regression`.
+  - `bbbp_*` binary classification (sklearn/PyTorch/TensorFlow), `tox21_analysis`, `math_molecule_analysis`,
+    `db_helper` (PostgreSQL access via sqlalchemy + psycopg).
+  - Datasets: classification (BBBP, ClinTox, HIV), regression (Delaney, Lipophilicity, SAMPL, BACE),
+    multitask (Tox21, SIDER, MUV, ToxCast), quantum (QM7b, QM8, QM9). Baseline metrics are documented in `README.md`.
 - `src/config/` (logging settings/`logging.json`), `src/constants.py`.
 - `tests/` mirrors `src/` (e.g. `tests/graph_theory/test_ripe_parser.py`); pytest uses `pythonpath = ["src"]`.
 - `data/` holds input datasets (not tracked, except docs/scripts; may be a symlink to an external datasets dir). Graph/geospatial
   notebooks read the `DATA_DIR` env var; `OUTPUT_DIR` is used for outputs. `pc_hardware_analysis` helpers
-  (`vulkan_math_data.data_dir()`, `utils/fs_utils.get_data_dir()`) resolve `data/` relative to the repo/cwd instead.
+  (`vulkan_math_data.data_dir()`, `utils/fs_utils.get_data_dir()`) resolve `data/` relative to the repo/cwd instead. `src/moleculenet/db_helper` reads the `DB_URL` env var
+  (PostgreSQL connection string, see `README.md`); never commit real credentials/hosts.
 
 ## Commands (run from the repo root)
 
@@ -61,6 +69,8 @@ Remote/VM Jupyter only: `uv run jupyter lab --allow-root --ip=0.0.0.0` (see `REA
 ## Data and File Handling
 
 - Reuse the existing loaders in `vulkan_math_data.py` for Vulkan/GPU datasets instead of re-parsing files in notebooks.
+- Preserve dataset-specific columns and target semantics for MoleculeNet data: sparse multitask labels are nullable targets,
+  use `mol_id`/`CID`/`CMPD_CHEMBLID`/`Compound ID` as natural keys when available, normalize QM8 duplicate headers before modeling.
 - Treat files in `data/` as source data unless the task explicitly requires generating derived artifacts.
 - Do not overwrite raw CSV, JSON, or SQL schema files unless the change clearly belongs to the dataset itself.
 - When adding derived outputs, keep them clearly named and separate from raw source files.
@@ -71,11 +81,17 @@ Remote/VM Jupyter only: `uv run jupyter lab --allow-root --ip=0.0.0.0` (see `REA
 - Prefer `pandas` DataFrames for tabular transformations and keep feature engineering explicit and readable.
 - Preserve reproducibility for ML code by setting random seeds when training models.
 - Avoid data leakage: do not fit scalers or models on target information outside the intended training scope.
+- Use explicit train/validation/test splits and keep framework comparisons (sklearn vs PyTorch vs TensorFlow) fair:
+  same splits, features and metrics, so notebook results stay comparable.
+- Match the task type to the dataset (classification, regression, multitask, quantum-property regression) and favor clear
+  baselines before graph / message-passing models.
 - Report clear metrics for the task type, following the existing pattern of structured metric dictionaries and result tables.
 - Keep model-comparison code readable and side-effect-light; prefer returning data structures over printing intermediate state.
 
 ## Notebook Guidance
 
+- Do not rename or renumber existing notebooks (especially the numbered `src/moleculenet/` ones) unless explicitly asked.
+- Update `README.md` (metrics/baselines) when adding a meaningful new notebook, baseline, or workflow.
 - If notebook logic becomes reusable or repeated, factor it into a Python module under `src/`.
 - Keep notebook cells deterministic where practical and avoid hidden state dependencies.
 - Prefer concise markdown explanations tied directly to the analysis being performed.
