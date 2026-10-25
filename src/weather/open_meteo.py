@@ -7,7 +7,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-
 DEFAULT_DATA_DIR = Path(__file__).resolve().parents[1] / "data" / "open-meteo"
 
 
@@ -47,8 +46,7 @@ def _dataset_slug(path: Path) -> str:
         stem = stem.removeprefix("gomel-")
 
     suffix = "-2020-01-01-2026-05-30"
-    if stem.endswith(suffix):
-        stem = stem[: -len(suffix)]
+    stem = stem.removesuffix(suffix)
 
     return stem.replace("-", "_")
 
@@ -62,7 +60,9 @@ def _classify_payload(payload: dict[str, Any]) -> tuple[str, str | None]:
         return "current", "time"
     if all(key in payload for key in ("latitude", "longitude", "timezone")):
         return "metadata", None
-    raise ValueError("Unsupported Open-Meteo payload; expected hourly, daily, current, or metadata-only sections")
+    raise ValueError(
+        "Unsupported Open-Meteo payload; expected hourly, daily, current, or metadata-only sections"
+    )
 
 
 def _row_count(section: Any, time_key: str | None) -> int:
@@ -86,7 +86,11 @@ def list_datasets(data_dir: Path = DEFAULT_DATA_DIR) -> list[OpenMeteoDataset]:
         payload = _load_json(path)
         kind, time_key = _classify_payload(payload)
         section = payload.get(kind, {}) if kind != "metadata" else {}
-        columns = tuple(key for key in section.keys() if key != "time") if isinstance(section, dict) else ()
+        columns = (
+            tuple(key for key in section if key != "time")
+            if isinstance(section, dict)
+            else ()
+        )
         datasets.append(
             OpenMeteoDataset(
                 path=path,
@@ -102,7 +106,9 @@ def list_datasets(data_dir: Path = DEFAULT_DATA_DIR) -> list[OpenMeteoDataset]:
 
 
 def build_hourly_table(data_dir: Path = DEFAULT_DATA_DIR) -> HourlyTable:
-    datasets = [dataset for dataset in list_datasets(data_dir) if dataset.kind == "hourly"]
+    datasets = [
+        dataset for dataset in list_datasets(data_dir) if dataset.kind == "hourly"
+    ]
     if not datasets:
         raise ValueError(f"No hourly datasets found in {data_dir}")
 
@@ -178,7 +184,9 @@ def summarize_hourly_table(data_dir: Path = DEFAULT_DATA_DIR) -> dict[str, Any]:
     }
 
 
-def export_hourly_csv(data_dir: Path = DEFAULT_DATA_DIR, output_path: Path | None = None) -> dict[str, Any]:
+def export_hourly_csv(
+    data_dir: Path = DEFAULT_DATA_DIR, output_path: Path | None = None
+) -> dict[str, Any]:
     table = build_hourly_table(data_dir)
     destination = output_path or data_dir.parent / "derived" / "canonical_hourly.csv"
     destination.parent.mkdir(parents=True, exist_ok=True)
