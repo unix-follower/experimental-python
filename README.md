@@ -74,3 +74,60 @@ Cross-framework BBBP validation metrics:
 - Treat sparse multitask labels as nullable targets.
 - Normalize QM8 duplicate headers before any modeling work.
 - Use framework-matched task definitions so comparisons are meaningful.
+
+## Weather Analysis
+
+Initial implementation now covers Open-Meteo file discovery, schema classification, canonical hourly alignment, and CSV export from the current Gomel dataset under `data/in/open-meteo`.
+
+### Commands
+
+Run from the project root.
+
+```bash
+uv run python src/weather/main.py inventory
+uv run python src/weather/main.py hourly-summary
+uv run python src/weather/main.py export-hourly-csv
+```
+
+Optional export location:
+
+```bash
+uv run python src/main.py export-hourly-csv --output data/out/weather/derived/gomel-hourly.csv
+```
+
+Notebook workflow:
+
+```bash
+uv run jupyter notebook src/weather/01_weather_forecasting_clustering_anomaly.ipynb
+uv run jupyter notebook src/weather/02_aqi_prediction.ipynb
+uv run jupyter notebook src/weather/03_pytorch_sequence_aqi_forecasting.ipynb
+uv run jupyter notebook src/weather/04_pytorch_tabular_temperature_forecasting.ipynb
+uv run jupyter notebook src/weather/05_pytorch_cnn_wind_anomaly_detection.ipynb
+uv run jupyter notebook src/weather/06_pytorch_transformer_representation_learning.ipynb
+uv run jupyter notebook src/weather/07_pytorch_autoencoder_unsupervised.ipynb
+```
+
+### Current behavior
+
+- Inventories all surviving JSON files in `data/in/open-meteo`
+- Separates hourly, daily, current, and metadata-only payloads
+- Builds one canonical hourly table from the existing hourly datasets
+- Excludes the deleted legacy single-variable file from all assumptions
+- Keeps flood data out of the hourly export because it is daily-resolution
+
+### Current dataset summary
+
+- 12 hourly files
+- 1 daily flood file
+- 1 current-conditions snapshot file
+- 1 metadata-only file
+- 56,208 hourly timestamps from 2020-01-01T00:00 through 2026-05-30T23:00
+- 151 aligned hourly data columns before calendar features
+
+### Next implementation slices
+
+- Add a reusable analysis package structure under `src/`
+- Materialize a daily table for flood modeling
+- Add feature engineering for lagged variables, derivatives, and rolling windows
+- Add more baseline notebooks or scripts for regression, forecasting, and anomaly detection
+- Add PyTorch sequence and deep-learning baselines next to the sklearn notebooks
