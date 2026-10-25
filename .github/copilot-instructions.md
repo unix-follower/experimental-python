@@ -1,7 +1,7 @@
 # Copilot Instructions
 
 Experiments with data structures, algorithms, graph theory, geospatial analysis, PC/GPU hardware analysis
-(Vulkan profiles, math and ML) and molecular machine learning (MoleculeNet) in Python 3.13 / uv (networkx, geopandas,
+(Vulkan profiles, math and ML) molecular machine learning (MoleculeNet) and exoplanet catalog analysis in Python 3.13 / uv (networkx, geopandas,
 pandas, numpy, scipy, sympy, scikit-learn, torch, tensorflow, rdkit, sqlalchemy/psycopg, matplotlib, seaborn; pytest for tests). Dependencies live in `pyproject.toml`.
 
 ## Layout
@@ -23,6 +23,9 @@ pandas, numpy, scipy, sympy, scikit-learn, torch, tensorflow, rdkit, sqlalchemy/
     `db_helper` (PostgreSQL access via sqlalchemy + psycopg).
   - Datasets: classification (BBBP, ClinTox, HIV), regression (Delaney, Lipophilicity, SAMPL, BACE),
     multitask (Tox21, SIDER, MUV, ToxCast), quantum (QM7b, QM8, QM9). Baseline metrics are documented in `README.md`.
+- `src/exoplanet/` – notebook-first exoplanet catalog analysis (moved from another repo; numbered, ordered progression):
+  `1_data_grounding_eda` (EU + NASA catalog CSVs) → `2_math_foundations` → `3_sklearn_baselines` → `4_pytorch_experiments`
+  → `5_tensorflow_parity`. Notebooks resolve `data/` via `Path.cwd() / "data"` (run from the repo root).
 - `src/config/` (logging settings/`logging.json`), `src/constants.py`.
 - `tests/` mirrors `src/` (e.g. `tests/graph_theory/test_ripe_parser.py`); pytest uses `pythonpath = ["src"]`.
 - `data/` holds input datasets (not tracked, except docs/scripts; may be a symlink to an external datasets dir). Graph/geospatial
@@ -90,7 +93,8 @@ Remote/VM Jupyter only: `uv run jupyter lab --allow-root --ip=0.0.0.0` (see `REA
 
 ## Notebook Guidance
 
-- Do not rename or renumber existing notebooks (especially the numbered `src/moleculenet/` ones) unless explicitly asked.
+- Keep the notebook progression intact (exoplanet: data/EDA → math → sklearn baselines → PyTorch → TensorFlow parity).
+- Do not rename or renumber existing notebooks (especially the numbered `src/moleculenet/` and `src/exoplanet/` ones) unless explicitly asked.
 - Update `README.md` (metrics/baselines) when adding a meaningful new notebook, baseline, or workflow.
 - If notebook logic becomes reusable or repeated, factor it into a Python module under `src/`.
 - Keep notebook cells deterministic where practical and avoid hidden state dependencies.
