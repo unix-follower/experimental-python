@@ -1,7 +1,7 @@
 # Copilot Instructions
 
 Experiments with data structures, algorithms, graph theory, geospatial analysis, PC/GPU hardware analysis
-(Vulkan profiles, math and ML) molecular machine learning (MoleculeNet) and exoplanet catalog analysis in Python 3.13 / uv (networkx, geopandas,
+(Vulkan profiles, math and ML) molecular machine learning (MoleculeNet) exoplanet catalog analysis and Open-Meteo weather/air-quality analysis in Python 3.13 / uv (networkx, geopandas,
 pandas, numpy, scipy, sympy, scikit-learn, torch, tensorflow, rdkit, sqlalchemy/psycopg, matplotlib, seaborn; pytest for tests). Dependencies live in `pyproject.toml`.
 
 ## Layout
@@ -26,6 +26,11 @@ pandas, numpy, scipy, sympy, scikit-learn, torch, tensorflow, rdkit, sqlalchemy/
 - `src/exoplanet/` – notebook-first exoplanet catalog analysis (moved from another repo; numbered, ordered progression):
   `1_data_grounding_eda` (EU + NASA catalog CSVs) → `2_math_foundations` → `3_sklearn_baselines` → `4_pytorch_experiments`
   → `5_tensorflow_parity`. Notebooks resolve `data/` via `Path.cwd() / "data"` (run from the repo root).
+- `src/weather/` – Open-Meteo weather/air-quality analysis for Gomel (moved from another repo):
+  - `open_meteo.py` – authoritative shared loader and canonical hourly table (`list_datasets`, `build_hourly_table`, `export_hourly_csv`).
+  - `main.py` – argparse CLI (`inventory`, `hourly-summary`, `export-hourly-csv`); notebooks `01`–`07` (forecasting, clustering,
+    anomaly detection, AQI, PyTorch sequence/tabular/CNN/transformer/autoencoder).
+  - Input JSON lives in `data/in/open-meteo` (per `README.md`); derived CSVs go under `data/out/weather/derived/`.
 - `src/config/` (logging settings/`logging.json`), `src/constants.py`.
 - `tests/` mirrors `src/` (e.g. `tests/graph_theory/test_ripe_parser.py`); pytest uses `pythonpath = ["src"]`.
 - `data/` holds input datasets (not tracked, except docs/scripts; may be a symlink to an external datasets dir). Graph/geospatial
@@ -45,6 +50,7 @@ uv build
 uv run jupyter lab
 uv run python -m src.graph_theory.utils.ripe_parser <file.ndjson>
 uv run python -m src.pc_hardware_analysis.collect_image_urls
+uv run python src/weather/main.py inventory          # also: hourly-summary, export-hourly-csv [--output PATH]
 ```
 
 Remote/VM Jupyter only: `uv run jupyter lab --allow-root --ip=0.0.0.0` (see `README.md`); never commit tokens or URLs with tokens.
@@ -112,3 +118,18 @@ Remote/VM Jupyter only: `uv run jupyter lab --allow-root --ip=0.0.0.0` (see `REA
 - For modeling utilities, prefer functions that accept DataFrames or Series and return plain Python or pandas objects.
 - For visualizations, use `matplotlib` or `seaborn` unless the task explicitly calls for something else.
 - When uncertain, optimize for reproducibility, transparency, and minimal surprise.
+
+## Weather (`src/weather/`) rules
+
+- Treat `src/weather/open_meteo.py` as the single source of truth for loading and the canonical hourly table; notebooks reuse
+  `build_hourly_table(...)` instead of re-parsing JSON.
+- Keep hourly and daily workflows separate: flood data is daily and must not enter the hourly table without an explicit aggregation path.
+- Work only from datasets that currently exist under the data dir; do not assume deleted legacy files.
+- Preserve timestamp-alignment and row-length validation in the loader, the `<dataset_slug>__<column_name>` column naming, and the
+  calendar fields (`timestamp`, `year`, `month`, `day`, `hour`, `day_of_year`, `weekday`).
+- Use chronological train/validation/test splits and train-only normalization; never shuffle across time for forecasting,
+  anomaly detection or representation learning unless a non-temporal experiment is requested.
+- Keep notebooks CPU-friendly; PyTorch notebooks use fixed seeds and `torch.device("cpu")` unless GPU work is requested.
+- Report reconstruction error / embedding behavior on held-out time slices for unsupervised models; compare models on the same slice and metric.
+- Keep `README.md` aligned with the actual CLI and notebook inventory; only claim workflows whose command/code path exists.
+- After changing `open_meteo.py` or `main.py`, validate with a narrow `uv run python src/weather/main.py ...` command.
