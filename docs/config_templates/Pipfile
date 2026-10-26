@@ -1,0 +1,27 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+matplotlib = "*"
+numpy = "*"
+sympy = "*"
+isort = "*"
+
+[dev-packages]
+coverage = "*"
+pylint = "*"
+black = "*"
+
+[requires]
+python_version = "3.12"
+
+[scripts]
+lint = "pylint --rcfile ../../../pylintrc ."
+test = "python3 -m unittest -v --locals"
+performance-test = "python3 -m unittest discover -v --locals -p 'perf_test_*.py'"
+coverage = "coverage run --source=src -m unittest -v --locals"
+coverage-html = "coverage html"
+format = "black --config pyproject.toml ."
+sort_imports = "isort ."
